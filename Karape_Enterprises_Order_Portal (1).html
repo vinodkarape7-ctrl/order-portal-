@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Karape Enterprises</title>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f4f7f6; margin: 0; padding: 15px; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); box-sizing: border-box; }
+        .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #eaeaea; padding-bottom: 12px; }
+        .header h1 { margin: 0; color: #1a1a1a; font-size: 26px; font-weight: 700; }
+        .header p { margin: 5px 0 0 0; color: #666; font-size: 14px; font-weight: 500; text-transform: uppercase; letter-spacing: 1px; }
+        .list-container { margin-bottom: 25px; }
+        .pipe-item { display: flex; flex-direction: column; padding: 12px 0; border-bottom: 1px solid #f0f0f0; }
+        .pipe-row-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+        .pipe-size { font-size: 15px; font-weight: 700; color: #1a1a1a; }
+        .qty-input { width: 70px; padding: 6px; border: 1px solid #ccc; border-radius: 6px; text-align: center; font-size: 15px; }
+        .pipe-details-row { display: flex; gap: 15px; font-size: 13px; color: #666; font-weight: 500; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 14px; color: #555; }
+        .form-control { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 15px; font-family: inherit; }
+        .total-section { background: #f9f9f9; padding: 15px; border-radius: 8px; text-align: right; margin-top: 20px; margin-bottom: 20px; border: 1px solid #ddd; }
+        .total-amount { font-size: 22px; font-weight: 700; color: #2e7d32; }
+        .btn-order { width: 100%; background: #25D366; color: white; border: none; padding: 14px; font-size: 16px; font-weight: 700; border-radius: 8px; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; }
+        .btn-order:hover { background: #128C7E; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>Karape Enterprises</h1>
+        <p>Carbon Fiber Pipe Supplier</p>
+    </div>
+
+    <div class="list-container" id="pipeList"></div>
+
+    <div class="form-group">
+        <label>Customer Name</label>
+        <input type="text" id="custName" class="form-control" placeholder="Enter your full name">
+    </div>
+    <div class="form-group">
+        <label>Delivery Address</label>
+        <textarea id="custAddress" class="form-control" rows="3" placeholder="Enter complete delivery address"></textarea>
+    </div>
+
+    <div class="total-section">
+        Grand Total Cost: <span class="total-amount">₹<span id="grandTotal">0</span></span>
+    </div>
+
+    <button class="btn-order" onclick="placeOrder()">Place Order via WhatsApp</button>
+</div>
+
+<script>
+    const startSize = 25.4;
+    const increment = 3.175;
+    const totalUnits = 12;
+    const items = [];
+
+    const listContainer = document.getElementById('pipeList');
+
+    for (let i = 0; i < totalUnits; i++) {
+        const size = startSize + (i * increment);
+        const roundedSize = parseFloat(size.toFixed(3));
+        const weightGrams = Math.round(roundedSize * 10);
+        const priceRs = Math.round(weightGrams * 5);
+
+        items.push({ size: roundedSize, weight: weightGrams, price: priceRs });
+
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'pipe-item';
+        itemDiv.innerHTML = 
+            '<div class="pipe-row-top">' +
+                '<span class="pipe-size">Carbon Fiber Pipe - ' + roundedSize + ' mm</span>' +
+                '<input type="number" class="qty-input" min="0" placeholder="Qty" id="qty-' + i + '" oninput="calculateTotal()">' +
+            '</div>' +
+            '<div class="pipe-details-row">' +
+                '<span>Wt: ' + weightGrams + ' g</span>' +
+                '<span>Price: ₹' + priceRs.toLocaleString('en-IN') + '</span>' +
+            '</div>';
+        listContainer.appendChild(itemDiv);
+    }
+
+    function calculateTotal() {
+        let total = 0;
+        items.forEach((item, index) => {
+            const qty = parseInt(document.getElementById('qty-' + index).value) || 0;
+            total += qty * item.price;
+        });
+        document.getElementById('grandTotal').innerText = total.toLocaleString('en-IN');
+        return total;
+    }
+
+    function placeOrder() {
+        const name = document.getElementById('custName').value.trim();
+        const address = document.getElementById('custAddress').value.trim();
+        const total = calculateTotal();
+
+        if (!name || !address) {
+            alert('Please fill in your Name and Address.');
+            return;
+        }
+
+        let orderDetails = "New Order - Karape Enterprises\n\n";
+        orderDetails += "Customer: " + name + "\n";
+        orderDetails += "Address: " + address + "\n\n";
+        orderDetails += "Items Ordered:\n";
+
+        let hasItems = false;
+        items.forEach((item, index) => {
+            const qty = parseInt(document.getElementById('qty-' + index).value) || 0;
+            if (qty > 0) {
+                hasItems = true;
+                orderDetails += "- " + item.size + " mm Pipe x " + qty + " pcs (Rs. " + (qty * item.price).toLocaleString('en-IN') + ")\n";
+            }
+        });
+
+        if (!hasItems) {
+            alert('Please add at least one item to your order.');
+            return;
+        }
+
+        orderDetails += "\nGrand Total: Rs. " + total.toLocaleString('en-IN');
+
+        const whatsappNumber = "918369133383";
+        const url = "https://wa.me/" + whatsappNumber + "?text=" + encodeURIComponent(orderDetails);
+        window.open(url, '_blank');
+    }
+</script>
+
+</body>
+</html>
